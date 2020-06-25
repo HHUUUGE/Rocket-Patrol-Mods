@@ -6,4 +6,16 @@ class Spaceship extends Phaser.GameObjects.Sprite{
         scene.add.existing(this);       //add this to the calling scene
         this.points=pointValue;         //assign how much this instance of Spaceship is worth
     }
+
+    update(){
+        this.x -=3
+
+        if(this.x <= 0 - this.width){
+            this.x = game.config.width;
+        }
+    }
+
+    reset(){
+        this.x=game.config.width;
+    }
 }
