@@ -43,7 +43,7 @@ class Play extends Phaser.Scene{
         for (let index = 0; index < 3; index++){
             this.flip.push(Phaser.Math.Between(0,1));
         }
-        console.log(this.flip);
+
         //add spaceshipsx3
         // if corresponding flip variable is true set the sprite to come from the opposite direction and flip the sprite
         if (this.flip[0]){
