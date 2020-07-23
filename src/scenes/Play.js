@@ -199,10 +199,13 @@ class Play extends Phaser.Scene{
         //check key input for restart
         if(this.gameOver && Phaser.Input.Keyboard.JustDown(keyF)){
             game.settings.spaceshipSpeed=this.speed;
+            this.music.stop();
             this.scene.restart({score:this.p1Score,highscore:this.highscore});
+
         }
         if(this.gameOver && Phaser.Input.Keyboard.JustDown(keyLEFT)){
-            this.scene.start("menuScene",{highscore:this.highscore});
+            this.music.stop();
+            this.scene.start("menuScene",{highscore:this.highscore}); 
         }
 
         //scroll starfield
