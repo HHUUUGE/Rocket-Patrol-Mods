@@ -24,7 +24,7 @@ class Menu extends Phaser.Scene{
         //Background Music
         // Music is a clip of Monster Parade by Loyalty Freak Music found at https://freemusicarchive.org/music/Loyalty_Freak_Music/WITCHY_BATTY_SPOOKY_HALLOWEEN_IN_SEPTEMBER_/Monster_Parade
         // Music is used under the CC 1.0 public domain license
-        this.load.audio('spooky','./assets/spoopy.wav');
+        this.load.audio('spooky','./assets/Spoopy.wav');
     }
     create(){
         let highScoreConfig = {
