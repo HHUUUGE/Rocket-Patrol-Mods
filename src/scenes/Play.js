@@ -5,15 +5,21 @@ class Play extends Phaser.Scene{
         super("playScene");
     }
 
+    init(data){
+        //pass highscore from calling scene
+        this.highscore=data.highscore;
+
+    }
 
     preload(){
         //load images and tilesprites
 
         this.load.image('rocket', './assets/rocket.png');
         this.load.image('spaceship', './assets/spaceship.png');
-        this.load.image('starfield', './assets/starfield.png');
+        this.load.image('starfield', './assets/HalloweenBackground.png');
         this.load.spritesheet('explosion', './assets/explosion.png', {frameWidth: 64, frameHeight: 32,
         startFrame: 0, endFrame: 9});
+
 
     }
 
@@ -22,6 +28,7 @@ class Play extends Phaser.Scene{
         //place tilesprite
         this.starfield = this.add.tileSprite(0,0,640,480,'starfield').setOrigin(0);
 
+       
 
         this.add.rectangle(5, 5, 630, 32, 0xFFFFFF).setOrigin(0, 0);
         this.add.rectangle(5, 443, 630, 32, 0xFFFFFF).setOrigin(0, 0);
@@ -32,11 +39,41 @@ class Play extends Phaser.Scene{
 
         //add rocket (p1)
         this.p1Rocket = new Rocket(this, game.config.width/2,431, 'rocket').setScale(.5).setOrigin(0);
-
+        this.flip=[];
+        for (let index = 0; index < 3; index++){
+            this.flip.push(Phaser.Math.Between(0,1));
+        }
+        console.log(this.flip);
         //add spaceshipsx3
-        this.spaceShip01 = new Spaceship(this,game.config.width+192, 260, 'spaceship',0, 30).setOrigin(0);
-        this.spaceShip02 = new Spaceship(this,game.config.width+96, 196, 'spaceship',0, 20).setOrigin(0);
-        this.spaceShip03 = new Spaceship(this,game.config.width, 132, 'spaceship',0, 10).setOrigin(0);
+        // if corresponding flip variable is true set the sprite to come from the opposite direction and flip the sprite
+        if (this.flip[0]){
+            this.spaceShip01 = new Spaceship(this,-192, 260, 'spaceship',0, 30, this.flip[0]).setOrigin(0);
+            this.spaceShip01.flipX=true;
+        }
+        else{
+            this.spaceShip01 = new Spaceship(this,game.config.width+192, 260, 'spaceship',0, 30,this.flip[0]).setOrigin(0);
+            this.spaceShip01.flipX=false;
+        }
+
+        if (this.flip[1]){
+            this.spaceShip02 = new Spaceship(this,-96, 196, 'spaceship',0, 20, this.flip[1]).setOrigin(0);
+            this.spaceShip02.flipX=true;
+        }
+        else{
+            this.spaceShip02 = new Spaceship(this,game.config.width+96, 196, 'spaceship',0, 20,this.flip[1]).setOrigin(0);
+            this.spaceShip02.flipX=false;
+        }
+
+        if (this.flip[2]){
+            this.spaceShip03 = new Spaceship(this,0, 132, 'spaceship',0, 10, this.flip[2]).setOrigin(0);
+            this.spaceShip03.flipX=true;
+        }
+        else{
+            this.spaceShip03 = new Spaceship(this,game.config.width, 132, 'spaceship',0, 10,this.flip[2]).setOrigin(0);
+            this.spaceShip03.flipX=false;
+        }
+
+        
         //define keys
         keyF=this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
         keyLEFT=this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
@@ -50,6 +87,12 @@ class Play extends Phaser.Scene{
 
         //score
         this.p1Score = 0;
+        
+        //highscore variable
+        if(this.highscore==0 || typeof(this.highscore)!="number"){
+            this.highscore=0;
+        }
+
 
         let scoreConfig = {
             fontFamily: 'Courier',
@@ -63,7 +106,54 @@ class Play extends Phaser.Scene{
             },
             fixedWidth: 100
         }
+
+        let highScoreConfig = {
+            fontFamily: 'Courier',
+            fontSize: '28px',
+            backgroundColor: '#F3B141',
+            color: '#843605',
+            align: 'right',
+            padding: {
+                top: 5,
+                bottom: 5,
+            },
+            fixedWidth: 150
+        }
+        let fireConfig = {
+            fontFamily: 'Courier',
+            fontSize: '28px',
+            backgroundColor: '#F3B141',
+            color: '#843605',
+            align: 'center',
+            padding: {
+                top: 5,
+                bottom: 5,
+            },
+            fixedWidth: 100
+        }
+
+        let timeConfig = {
+            fontFamily: 'Courier',
+            fontSize: '28px',
+            backgroundColor: '#F3B141',
+            color: '#843605',
+            align: 'center',
+            padding: {
+                top: 5,
+                bottom: 5,
+            },
+            fixedWidth: 50
+        }
+
+
+        //display player score
         this.scoreLeft = this.add.text(69, 54, this.p1Score, scoreConfig);
+
+        //create fire UI and hide it
+        this.fire= this.add.text(215, 54, "FIRE", fireConfig).setAlpha(0);
+
+        //display high score
+        this.highDisp = this.add.text(421, 54, "HS: " + this.highscore, highScoreConfig);
 
         this.gameOver = false;
 
@@ -75,24 +165,59 @@ class Play extends Phaser.Scene{
             this.gameOver = true;
         }, null, this);
 
+        this.countdown=(game.settings.gameTimer-this.clock.getElapsed())/1000;
+        
+        //display time remaining
+        this.timeLeft = this.add.text(368,54, this.countdown.toFixed(0), timeConfig);
+
+        this.speed=game.settings.spaceshipSpeed;
+
+        this.speedup = this.time.delayedCall(30000, () => {
+            game.settings.spaceshipSpeed=game.settings.spaceshipSpeed*2;
+        }, null, this);
+
+        let musicConfig={
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0
+        }
+
+        this.music= this.sound.add('spooky',musicConfig);
+        this.music.play();
+
     }
 
     update(){
 
+
+
+        this.countdown=(game.settings.gameTimer-this.clock.getElapsed())/1000;
         //check key input for restart
         if(this.gameOver && Phaser.Input.Keyboard.JustDown(keyF)){
-            this.scene.restart(this.p1Score);
+            game.settings.spaceshipSpeed=this.speed;
+            this.scene.restart({score:this.p1Score,highscore:this.highscore});
         }
         if(this.gameOver && Phaser.Input.Keyboard.JustDown(keyLEFT)){
-            this.scene.start("menuScene");
+            this.scene.start("menuScene",{highscore:this.highscore});
         }
 
         //scroll starfield
         this.starfield.tilePositionX-=4;
-        
         if(!this.gameOver){
             //update rocket
             this.p1Rocket.update();
+
+            // while ship is firing make fire text visible
+            if (this.p1Rocket.isFiring){
+                this.fire.setAlpha(1);
+            }
+            else{
+                this.fire.setAlpha(0);
+            }
             //update spaceships
             this.spaceShip01.update();
             this.spaceShip02.update();
@@ -101,16 +226,32 @@ class Play extends Phaser.Scene{
 
         if(this.checkCollision(this.p1Rocket,this.spaceShip01)){
             this.p1Rocket.reset();
+
+            //make fire text invisible
+            this.fire.setAlpha(0);
             this.shipExplode(this.spaceShip01);
         }
         if(this.checkCollision(this.p1Rocket,this.spaceShip02)){
             this.p1Rocket.reset();
+
+            //make fire text invisible
+            this.fire.setAlpha(0);
             this.shipExplode(this.spaceShip02);
         }
         if(this.checkCollision(this.p1Rocket,this.spaceShip03)){
             this.p1Rocket.reset();
+
+            //make fire text invisible
+            this.fire.setAlpha(0);
             this.shipExplode(this.spaceShip03);
         }
+
+        if(this.p1Score>this.highscore){
+            this.highscore=this.p1Score;
+            this.highDisp.text="HS:" + this.highscore;
+        }
+
+        this.timeLeft.text=this.countdown.toFixed(0);
 
     }
 
@@ -140,6 +281,24 @@ class Play extends Phaser.Scene{
         //score increment and repaint
         this.p1Score += ship.points;
         this.scoreLeft.text=this.p1Score;
-        this.sound.play('sfx_explosion');
+        let sound=Phaser.Math.Between(1,5);
+        switch (sound){
+            case 1:
+                this.sound.play('sfx_explosion');
+                break;
+            case 2:
+                this.sound.play('explosion1');
+                break;
+            case 3:
+                this.sound.play('explosion2');
+                break;
+            case 4:
+                this.sound.play('explosion3');
+                break;
+            case 5:
+                this.sound.play('explosion4');
+                break;
+        }
+
     }
 }
